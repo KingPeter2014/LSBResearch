@@ -1,0 +1,539 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>NaiveLSB</title><meta name="generator" content="MATLAB 8.6"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-12-20"><meta name="DC.source" content="NaiveLSB.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><pre class="codeinput"><span class="comment">%NaiveLSB  - this embedds graysace image into grayscale cover</span>
+
+<span class="comment">% Written by Eze Peter U., Ph.D Student at Department of Computing and</span>
+<span class="comment">% Information Systems, University of Melbourne, Australia.</span>
+<span class="comment">% Date: 20th December 2016</span>
+
+<span class="comment">% It embeds the entire 8bits of the watermark into n-bitplanes of the</span>
+<span class="comment">% cover. The user chooses any number of bitplanes between 1-4 of the LSBs</span>
+<span class="comment">% of the Cover. The program first of all calculates if the size of the</span>
+<span class="comment">% watermark can be accomodated into the number of bitplanes of the cover as</span>
+<span class="comment">% selected by the user. The dimesions of cover and watermark need not be</span>
+<span class="comment">% equal.</span>
+
+<span class="comment">% This program is only for Embedding, next is to design the Recovery</span>
+<span class="comment">% Algorithm</span>
+
+
+
+clc;    <span class="comment">% Clear the command window.</span>
+close <span class="string">all</span>;  <span class="comment">% Close all figures (except those of imtool.)</span>
+imtool <span class="string">close</span> <span class="string">all</span>;  <span class="comment">% Close all imtool figures.</span>
+clear;  <span class="comment">% Erase all existing variables.</span>
+workspace;  <span class="comment">% Make sure the workspace panel is showing.</span>
+fontSize = 12;
+
+<span class="comment">% Read in the image what will have another image hidden into it.</span>
+fileName=<span class="string">'moon.tif'</span>;
+originalImage = imread(fileName);
+<span class="comment">% Get the number of rows and columns in the original image.</span>
+[visibleRows, visibleColumns, numberOfColorChannels] = size(originalImage);
+<span class="keyword">if</span> numberOfColorChannels &gt; 1
+	<span class="comment">% If it's color, extract the red channel.</span>
+	originalImage = originalImage(:,:,1);
+<span class="keyword">end</span>
+
+<span class="comment">% read the message image you want to hide in the cover image</span>
+messageFileName=<span class="string">'300.jpg'</span>; <span class="comment">%'dtcx64.gif';</span>
+hiddenImage = imread(messageFileName);
+<span class="comment">% Get the number of rows and columns in the hidden image.</span>
+[hiddenRows, hiddenColumns, numberOfColorChannels] = size(hiddenImage);
+<span class="keyword">if</span> numberOfColorChannels &gt; 1
+	<span class="comment">% If it's color, extract the red channel.</span>
+	hiddenImage = hiddenImage(:,:,1);
+<span class="keyword">end</span>
+
+
+<span class="comment">% Get the bit plane to hide the image in.</span>
+prompt = <span class="string">'Enter number of LSB bit planes to use (1 - 4) '</span>;
+dialogTitle = <span class="string">'Enter Bit Plane to Replace'</span>;
+numberOfLines = 1;
+defaultResponse = {<span class="string">'1'</span>};
+bitToSet = str2double(cell2mat(inputdlg(prompt, dialogTitle, numberOfLines, defaultResponse)));
+
+<span class="keyword">if</span> bitToSet &gt; 4
+    warning(<span class="string">'Maximum of 4 LSB bitplanes can be replaced. Program aborted!'</span>)
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+
+extraMetadata = 48;<span class="comment">% row of watermark,column of watermark and number of bitplanes to use</span>
+maximumBitCapacityOfCover = bitToSet*visibleRows*visibleColumns;
+
+binaryWatermarkSize = hiddenRows*hiddenColumns;<span class="comment">% uses only MSB of watermark pixels</span>
+grayWatermarkSize = binaryWatermarkSize * 8;<span class="comment">% uses entire 8bits of image pixel</span>
+embedsize = grayWatermarkSize + extraMetadata;
+<span class="comment">% If image to be hidden is bigger than the original image multiplied by selected no of bitplanes, abort process.</span>
+<span class="keyword">if</span> embedsize &gt; maximumBitCapacityOfCover
+	 warning(<span class="string">'Watermark size is too big. Increase number of bit planes or reduce watermark size. Program aborted!'</span>)
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+vectorWatermark = zeros(embedsize,1,<span class="string">'uint8'</span>);
+
+
+<span class="comment">%write the meta data to the cover</span>
+<span class="keyword">for</span> i = 1:16
+   vectorWatermark(i) = 255*bitget(hiddenRows, i);<span class="comment">% bits for no of rows</span>
+<span class="keyword">end</span>
+
+<span class="keyword">for</span> i = 1:16
+    vectorWatermark(i+16) = 255*bitget(hiddenColumns, i);<span class="comment">% bits for no of cols</span>
+<span class="keyword">end</span>
+
+
+<span class="keyword">for</span> i = 1:16
+    vectorWatermark(i+32) = 255*bitget(bitToSet, i);<span class="comment">% bits for no of bitplanes to hide</span>
+<span class="keyword">end</span>
+
+size(vectorWatermark);
+count=0;
+<span class="comment">%Convert the grayscale watermark to a binary vector array</span>
+<span class="keyword">for</span> i=1:hiddenRows
+    <span class="keyword">for</span> j= 1 : hiddenColumns
+        thisByteArray = transpose(dec2bin(uint8(hiddenImage(i,j)),8));<span class="comment">% convert each pixel value to byte value</span>
+        thisByteArray = thisByteArray(:);
+        N = length(thisByteArray);<span class="comment">% Get the length of the byte array</span>
+        <span class="keyword">for</span> k = 1:N <span class="comment">%extract each bit of pixel</span>
+            <span class="keyword">if</span>(thisByteArray(k) == <span class="string">'1'</span>)
+               vectorWatermark(48+k + count) = 1;
+<span class="comment">%                vectorWatermark(k+count)</span>
+            <span class="keyword">else</span>
+               vectorWatermark(48+k + count) = 0;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        count = count+1;<span class="comment">%increment to the next pixel of watermark</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+<span class="comment">% return</span>
+stego = originalImage; <span class="comment">% make a copy of the original cover image</span>
+sizeOF_STEGO = size(stego);
+msize=size(vectorWatermark);
+msize1 = msize(1);
+index = 1;row=1;col=1;
+embeddingrate=0;
+
+<span class="comment">% Embed  the metadata in only the LSBs of pixels 1 to 48 of cover</span>
+ a=1;
+       i=0;j=0;
+        <span class="keyword">for</span> row=1:visibleRows
+            <span class="keyword">for</span> col=1:visibleColumns
+
+                    <span class="keyword">if</span> a &lt; 49
+                        stego(row,col) = bitset(stego(row,col),1, vectorWatermark(a));<span class="comment">% Set the LSB of stego to the each row,col and no of bitplanes to use</span>
+                        a=a+1;
+                    <span class="keyword">else</span>
+                        <span class="keyword">break</span>;
+                    <span class="keyword">end</span>
+                    <span class="keyword">if</span> a == 49
+                        <span class="keyword">break</span>;
+                    <span class="keyword">end</span>
+            <span class="keyword">end</span>
+            <span class="keyword">if</span> a == 49
+             <span class="keyword">break</span>;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+col= col+1;
+
+ <span class="keyword">for</span> row=row:visibleRows
+            <span class="keyword">for</span> col=1:visibleColumns
+
+                    <span class="keyword">if</span> a &lt; msize1
+                            <span class="keyword">for</span> bitplane= 1:bitToSet
+                                stego(row,col) = bitset(stego(row,col),1, vectorWatermark(a));<span class="comment">% Set the LSB of stego to the each row,col and no of bitplanes to use</span>
+                                a=a+1;
+                            <span class="keyword">end</span>
+                    <span class="keyword">else</span>
+                        <span class="keyword">break</span>;
+                    <span class="keyword">end</span>
+                    <span class="keyword">if</span> a == msize1
+                        <span class="keyword">break</span>;
+                    <span class="keyword">end</span>
+            <span class="keyword">end</span>
+            embeddingrate = embedsize/(visibleRows*visibleColumns);
+            <span class="keyword">if</span> a == msize1
+             <span class="keyword">break</span>;
+            <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+<span class="comment">% for row=row:visibleRows</span>
+<span class="comment">%      for col = col:visibleColumns</span>
+<span class="comment">%         for bitplane= 1:bitToSet</span>
+<span class="comment">%              if a &lt; msize1</span>
+<span class="comment">%                  stego(row,col) = bitset(stego(row,col),bitplane, vectorWatermark(a));% Set</span>
+<span class="comment">%                 a = a+1;</span>
+<span class="comment">%              end</span>
+<span class="comment">%          end</span>
+<span class="comment">%     end</span>
+<span class="comment">%      embeddingrate = embedsize/(visibleRows*visibleColumns);</span>
+<span class="comment">%  end</span>
+<span class="comment">%</span>
+
+<span class="comment">%   a</span>
+<span class="comment">%   row</span>
+<span class="comment">%   col</span>
+
+<span class="comment">% Mean Square Error btw stego and cover</span>
+mse = immse(originalImage,stego);
+
+p=psnr(originalImage,stego);<span class="comment">%  Compute PSNR between cover and stego images</span>
+
+<span class="comment">% MSSIM</span>
+<span class="comment">%[mssim,map] = ssim(originalcover,cover);</span>
+[mssim,map] = ssim(double(originalImage),double(stego));
+mssim;
+result= strcat(<span class="string">'S-Histogram:'</span>,<span class="string">'MSE='</span>,num2str(mse),<span class="string">',PSNR='</span>,num2str(p),<span class="string">',SSIM='</span>,num2str(mssim),<span class="string">', Bpp='</span>,num2str(embeddingrate))
+
+
+<span class="comment">% Display the image.</span>
+subplot(3, 3, 1);
+imshow(hiddenImage, []);
+title(<span class="string">'Image to be Hidden'</span>, <span class="string">'FontSize'</span>, fontSize);
+
+<span class="comment">% Display the original gray scale image.</span>
+subplot(3, 3, 2);
+imshow(originalImage, []);
+title(<span class="string">'Original Grayscale Cover Image'</span>, <span class="string">'FontSize'</span>, fontSize);
+
+<span class="comment">% Enlarge figure to full screen.</span>
+set(gcf, <span class="string">'units'</span>,<span class="string">'normalized'</span>,<span class="string">'outerposition'</span>,[0 0 1 1]);
+set(gcf,<span class="string">'name'</span>,<span class="string">'Naive LSB'</span>,<span class="string">'numbertitle'</span>,<span class="string">'off'</span>)
+
+<span class="comment">% Let's compute and display the histogram.</span>
+[pixelCount, grayLevels] = imhist(originalImage);
+subplot(3, 3, 3);
+bar(pixelCount);
+title(<span class="string">'Histogram of Cover Image'</span>, <span class="string">'FontSize'</span>, fontSize);
+xlim([0 grayLevels(end)]); <span class="comment">% Scale x axis manually.</span>
+grid <span class="string">on</span>;
+
+<span class="comment">% Let's compute and display the histogram of Message Watermark.</span>
+[pixelCount, grayLevels] = imhist(hiddenImage);
+subplot(3, 3, 4);
+bar(pixelCount);
+title(<span class="string">'Histogram of Watermark Image'</span>, <span class="string">'FontSize'</span>, fontSize);
+xlim([0 grayLevels(end)]); <span class="comment">% Scale x axis manually.</span>
+grid <span class="string">on</span>;
+
+
+<span class="comment">% Display the Stego image.</span>
+subplot(3, 3, 5);
+imshow(stego, []);
+title(<span class="string">'Stego Image'</span>, <span class="string">'FontSize'</span>, fontSize);
+
+<span class="comment">% Let's compute and display the histogram of stego.</span>
+[pixelCount, grayLevels] = imhist(stego);
+subplot(3, 3, 6);
+bar(pixelCount);
+title(result, <span class="string">'FontSize'</span>, fontSize);
+xlim([0 grayLevels(end)]); <span class="comment">% Scale x axis manually.</span>
+grid <span class="string">on</span>;
+</pre><pre class="codeoutput">
+result =
+
+S-Histogram:MSE=0.44596,PSNR=51.5695,SSIM=0.94925, Bpp=2.6718
+
+</pre><img vspace="5" hspace="5" src="NaiveLSB_01.png" style="width:1522px;height:776px;" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%NaiveLSB  - this embedds graysace image into grayscale cover
+
+% Written by Eze Peter U., Ph.D Student at Department of Computing and
+% Information Systems, University of Melbourne, Australia.
+% Date: 20th December 2016
+
+% It embeds the entire 8bits of the watermark into n-bitplanes of the
+% cover. The user chooses any number of bitplanes between 1-4 of the LSBs
+% of the Cover. The program first of all calculates if the size of the
+% watermark can be accomodated into the number of bitplanes of the cover as
+% selected by the user. The dimesions of cover and watermark need not be
+% equal.
+
+% This program is only for Embedding, next is to design the Recovery
+% Algorithm
+
+
+
+clc;    % Clear the command window.
+close all;  % Close all figures (except those of imtool.)
+imtool close all;  % Close all imtool figures.
+clear;  % Erase all existing variables.
+workspace;  % Make sure the workspace panel is showing.
+fontSize = 12;
+
+% Read in the image what will have another image hidden into it.
+fileName='moon.tif';
+originalImage = imread(fileName);
+% Get the number of rows and columns in the original image.
+[visibleRows, visibleColumns, numberOfColorChannels] = size(originalImage);
+if numberOfColorChannels > 1
+	% If it's color, extract the red channel.
+	originalImage = originalImage(:,:,1);
+end
+
+% read the message image you want to hide in the cover image
+messageFileName='300.jpg'; %'dtcx64.gif';
+hiddenImage = imread(messageFileName);
+% Get the number of rows and columns in the hidden image.
+[hiddenRows, hiddenColumns, numberOfColorChannels] = size(hiddenImage);
+if numberOfColorChannels > 1
+	% If it's color, extract the red channel.
+	hiddenImage = hiddenImage(:,:,1);
+end
+
+
+% Get the bit plane to hide the image in.
+prompt = 'Enter number of LSB bit planes to use (1 - 4) ';
+dialogTitle = 'Enter Bit Plane to Replace';
+numberOfLines = 1;
+defaultResponse = {'1'};
+bitToSet = str2double(cell2mat(inputdlg(prompt, dialogTitle, numberOfLines, defaultResponse)));
+
+if bitToSet > 4
+    warning('Maximum of 4 LSB bitplanes can be replaced. Program aborted!')
+    return 
+end
+
+extraMetadata = 48;% row of watermark,column of watermark and number of bitplanes to use
+maximumBitCapacityOfCover = bitToSet*visibleRows*visibleColumns;
+
+binaryWatermarkSize = hiddenRows*hiddenColumns;% uses only MSB of watermark pixels
+grayWatermarkSize = binaryWatermarkSize * 8;% uses entire 8bits of image pixel
+embedsize = grayWatermarkSize + extraMetadata;
+% If image to be hidden is bigger than the original image multiplied by selected no of bitplanes, abort process.
+if embedsize > maximumBitCapacityOfCover 
+	 warning('Watermark size is too big. Increase number of bit planes or reduce watermark size. Program aborted!')
+    return  
+end
+vectorWatermark = zeros(embedsize,1,'uint8');
+
+
+%write the meta data to the cover
+for i = 1:16
+   vectorWatermark(i) = 255*bitget(hiddenRows, i);% bits for no of rows
+end
+ 
+for i = 1:16
+    vectorWatermark(i+16) = 255*bitget(hiddenColumns, i);% bits for no of cols
+end
+
+ 
+for i = 1:16
+    vectorWatermark(i+32) = 255*bitget(bitToSet, i);% bits for no of bitplanes to hide
+end
+
+size(vectorWatermark);
+count=0;
+%Convert the grayscale watermark to a binary vector array
+for i=1:hiddenRows
+    for j= 1 : hiddenColumns
+        thisByteArray = transpose(dec2bin(uint8(hiddenImage(i,j)),8));% convert each pixel value to byte value
+        thisByteArray = thisByteArray(:);
+        N = length(thisByteArray);% Get the length of the byte array
+        for k = 1:N %extract each bit of pixel
+            if(thisByteArray(k) == '1')
+               vectorWatermark(48+k + count) = 1;
+%                vectorWatermark(k+count)
+            else
+               vectorWatermark(48+k + count) = 0;
+            end
+        end
+        count = count+1;%increment to the next pixel of watermark
+    end
+end
+% return
+stego = originalImage; % make a copy of the original cover image
+sizeOF_STEGO = size(stego);
+msize=size(vectorWatermark);
+msize1 = msize(1);
+index = 1;row=1;col=1;
+embeddingrate=0;
+
+% Embed  the metadata in only the LSBs of pixels 1 to 48 of cover
+ a=1;
+       i=0;j=0;
+        for row=1:visibleRows
+            for col=1:visibleColumns
+                
+                    if a < 49
+                        stego(row,col) = bitset(stego(row,col),1, vectorWatermark(a));% Set the LSB of stego to the each row,col and no of bitplanes to use                         
+                        a=a+1;
+                    else
+                        break;
+                    end
+                    if a == 49
+                        break;
+                    end
+            end
+            if a == 49
+             break;
+            end
+        end
+
+col= col+1;
+
+ for row=row:visibleRows
+            for col=1:visibleColumns
+                
+                    if a < msize1
+                            for bitplane= 1:bitToSet
+                                stego(row,col) = bitset(stego(row,col),1, vectorWatermark(a));% Set the LSB of stego to the each row,col and no of bitplanes to use                         
+                                a=a+1;
+                            end
+                    else
+                        break;
+                    end
+                    if a == msize1
+                        break;
+                    end
+            end
+            embeddingrate = embedsize/(visibleRows*visibleColumns);  
+            if a == msize1
+             break;
+            end
+end
+ 
+ 
+% for row=row:visibleRows
+%      for col = col:visibleColumns
+%         for bitplane= 1:bitToSet
+%              if a < msize1
+%                  stego(row,col) = bitset(stego(row,col),bitplane, vectorWatermark(a));% Set                         
+%                 a = a+1;
+%              end       
+%          end
+%     end
+%      embeddingrate = embedsize/(visibleRows*visibleColumns);  
+%  end
+%             
+        
+%   a
+%   row
+%   col  
+
+% Mean Square Error btw stego and cover
+mse = immse(originalImage,stego);
+
+p=psnr(originalImage,stego);%  Compute PSNR between cover and stego images
+
+% MSSIM
+%[mssim,map] = ssim(originalcover,cover);
+[mssim,map] = ssim(double(originalImage),double(stego));
+mssim;
+result= strcat('S-Histogram:','MSE=',num2str(mse),',PSNR=',num2str(p),',SSIM=',num2str(mssim),', Bpp=',num2str(embeddingrate))
+
+
+% Display the image.
+subplot(3, 3, 1);
+imshow(hiddenImage, []);
+title('Image to be Hidden', 'FontSize', fontSize);
+
+% Display the original gray scale image.
+subplot(3, 3, 2);
+imshow(originalImage, []);
+title('Original Grayscale Cover Image', 'FontSize', fontSize);
+
+% Enlarge figure to full screen.
+set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+set(gcf,'name','Naive LSB','numbertitle','off') 
+
+% Let's compute and display the histogram.
+[pixelCount, grayLevels] = imhist(originalImage);
+subplot(3, 3, 3); 
+bar(pixelCount);
+title('Histogram of Cover Image', 'FontSize', fontSize);
+xlim([0 grayLevels(end)]); % Scale x axis manually.
+grid on;
+
+% Let's compute and display the histogram of Message Watermark.
+[pixelCount, grayLevels] = imhist(hiddenImage);
+subplot(3, 3, 4); 
+bar(pixelCount);
+title('Histogram of Watermark Image', 'FontSize', fontSize);
+xlim([0 grayLevels(end)]); % Scale x axis manually.
+grid on;
+
+
+% Display the Stego image.
+subplot(3, 3, 5);
+imshow(stego, []);
+title('Stego Image', 'FontSize', fontSize);
+
+% Let's compute and display the histogram of stego.
+[pixelCount, grayLevels] = imhist(stego);
+subplot(3, 3, 6); 
+bar(pixelCount);
+title(result, 'FontSize', fontSize);
+xlim([0 grayLevels(end)]); % Scale x axis manually.
+grid on;
+
+
+##### SOURCE END #####
+--></body></html>
