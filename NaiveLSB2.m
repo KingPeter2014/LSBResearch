@@ -22,7 +22,7 @@ workspace;  % Make sure the workspace panel is showing.
 fontSize = 12;
 
 % Read in the image what will have another image hidden into it.
-fileName='wash-ir.tiff';
+fileName='mandrill512.tiff';%seminontexture512.jpg,mandrill512.tiff,untexturedcover.png,boat.512.tiff,wash-ir.tiff,textured512.tiff
 originalImage = imread(fileName);
 
 % Get the number of rows and columns in the original image.
@@ -33,7 +33,7 @@ if numberOfColorChannels > 1
 end
 
 % read the message image you want to hide in the cover image
-messageFileName='blacktree.jpg'; %'dtcx64.gif';
+messageFileName='lady350.gif'; %'300.gif,blacktree200.gif,man256.gif,lena128.gif,facebook.jpg,SpiralEmbedding.jpg,red240.png,lenafetch.png,pepper512.gif,faces.gif,dtcx64.gif',boat512plot2.png,usinex128.gif,skull.gif
 hiddenImage = imread(messageFileName);
 
 % Get the number of rows and columns in the hidden image.
@@ -273,7 +273,7 @@ title('Stego Image', 'FontSize', fontSize);
 [pixelCount, grayLevels] = imhist(stego);
 subplot(3, 3, 6); 
 bar(pixelCount);
-title(result, 'FontSize', fontSize);
+title('Stego Histogram', 'FontSize', fontSize);
 xlim([0 grayLevels(end)]); % Scale x axis manually.
 grid on;
 
